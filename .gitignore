@@ -2,3 +2,6 @@
 
 .DS_Store
 .localized
+
+# dotenvx
+.env.keys
