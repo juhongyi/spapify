@@ -6,7 +6,7 @@
 
 ### Albums
 
-- [ ] Get Album
+- [] Get Album
 - [ ] Get Several Albums
 - [ ] Get Album Tracks
 - [ ] Get User's Saved Albums
@@ -68,3 +68,10 @@
 - [ ] Get Track's Audio Features
 - [ ] Get Track's Audio Analysis
 - [ ] Get Recommendations
+
+## Tech stack
+
+- Python 3.13
+- uv
+- requests
+- dotenvx
