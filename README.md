@@ -2,18 +2,21 @@
 
 ## Web API list
 
-✅ - Implemented on our service  
+☑️ - Implemented on our service  
+👀 - Currently working on
 
 ### Albums
 
-- [] Get Album
+- [ ] Get Album
 - [ ] Get Several Albums
 - [ ] Get Album Tracks
 - [ ] Get User's Saved Albums
 - [ ] Save Albums for Current User
 - [ ] Remove Users' Saved Albums
 - [ ] Check User's Saved Albums
-- [ ] Get New Releases
+- [ ] 👀 Get New Releases
+  - Checking new data frequency...
+  - Using ETag HTTP header
 
 ### Artists
 
