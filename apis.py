@@ -36,12 +36,6 @@ def get_access_token(client_string: str) -> str:
             if response.status_code == 200:
                 response_data = response.json()
                 return response_data["access_token"]  # Early return
-
-            logging.warning("Failed to call '/api/token' Spotify endpoint")
-            retries += 1
-
-            if retries < MAX_RETRIES:
-                time.sleep(2**retries)  # 2, 4, 8, 16, ...
         except KeyError:
             logging.warning(
                 "access_token not found in response from '/api/token' Spotify endpoint"
@@ -50,6 +44,12 @@ def get_access_token(client_string: str) -> str:
             logging.warning(
                 "RequestException when calling '/api/token' Spotify endpoint: %s", e
             )
+        finally:
+            logging.warning("Failed to call '/api/token' Spotify endpoint")
+            retries += 1
+
+            if retries < MAX_RETRIES:
+                time.sleep(2**retries)  # 2, 4, 8, 16, ...
 
     logging.error("Failed to get access_token from Spotify after max retries")
     raise ValueError("Failed to get access_token from Spotify after max retries")
@@ -82,13 +82,13 @@ def send_discord_alert(
                     "Successfully sent Discord alert with message: %s", message
                 )
                 return  # Early return
-
+        except requests.RequestException as e:
+            logging.warning("RequestException when calling Discord webhook: %s", e)
+        finally:
             logging.warning("Failed to send Discord alert with message: %s", message)
             retries += 1
 
             if retries < MAX_RETRIES:
                 time.sleep(2**retries)  # 2, 4, 8, 16, ...
-        except requests.RequestException as e:
-            logging.warning("RequestException when calling Discord webhook: %s", e)
 
     logging.error("Failed to send Discord alert after max retries")
