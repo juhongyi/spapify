@@ -1,5 +1,4 @@
 # macOS
-
 .DS_Store
 .localized
 
@@ -7,3 +6,6 @@
 .env.keys
 .env
 .env.production
+
+# Auth
+access_token.txt
