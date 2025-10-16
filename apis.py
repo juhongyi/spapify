@@ -51,7 +51,6 @@ def get_access_token(client_string: str) -> str:
             if retries < MAX_RETRIES:
                 time.sleep(2**retries)  # 2, 4, 8, 16, ...
 
-    logging.error("Failed to get access_token from Spotify after max retries")
     raise ValueError("Failed to get access_token from Spotify after max retries")
 
 
@@ -161,9 +160,6 @@ def get_new_released_albums(
         )
         return entire_albums
 
-    logging.error(
-        "Failed to get any new released albums from Spotify after max retries"
-    )
     raise ValueError(
         "Failed to get any new released albums from Spotify after max retries"
     )
