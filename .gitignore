@@ -12,3 +12,4 @@ access_token.txt
 
 # Python
 __pycache__/
+main.log
