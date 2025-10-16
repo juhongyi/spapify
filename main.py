@@ -45,6 +45,7 @@ def refresh_access_token(
                 access_token,
             )
     except ValueError:
+        logging.error("Failed to get access_token from Spotify after max retries")
         send_discord_alert(
             message="Failed to refresh access_token from Spotify. This job will retry in the next scheduled run (approx. 20 mins).",
             discord_webhook_id=discord_webhook_id,
