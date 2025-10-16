@@ -43,11 +43,11 @@ def get_access_token(client_string: str) -> str:
             if retries < MAX_RETRIES:
                 time.sleep(2**retries)  # 2, 4, 8, 16, ...
         except KeyError:
-            logging.error(
+            logging.warning(
                 "access_token not found in response from '/api/token' Spotify endpoint"
             )
         except requests.RequestException as e:
-            logging.error(
+            logging.warning(
                 "RequestException when calling '/api/token' Spotify endpoint: %s", e
             )
 
