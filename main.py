@@ -1,5 +1,6 @@
 import os
 import base64
+import argparse
 
 import requests
 
@@ -52,7 +53,23 @@ def poc_get_new_releases_etag():
 
 
 def main():
-    poc_get_new_releases_etag()
+    """Main function to parse arguments and execute corresponding job."""
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-j",
+        "--job",
+        type=str,
+        required=True,
+        help="specify the job to run",
+        metavar="",
+    )
+    args = parser.parse_args()
+
+    if args.job == "refresh_access_token":
+        ...  # refresh_access_token()
+    elif args.job == "get_new_releases":
+        ...  # get_new_releases()
 
 
 if __name__ == "__main__":
