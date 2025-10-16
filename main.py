@@ -6,6 +6,14 @@ import logging
 from apis import get_access_token, send_discord_alert
 
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(levelname)s] %(asctime)s %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S%z",
+    handlers=[logging.FileHandler("main.log")],
+)
+
+
 def refresh_access_token(
     client_id: str,
     client_secret: str,
