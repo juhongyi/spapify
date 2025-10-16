@@ -1,5 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-cd spapify
-export PATH="$HOME/.local/bin:$PATH"
-./dotenvx run -f .env -- uv run main.py
+cd $HOME/spapify  # Cloned repo directory
+
+. $HOME/.local/bin/env  # Add 'uv', 'dotenvx' binary to PATH
+dotenvx run -f .env -- uv run main.py
