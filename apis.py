@@ -92,3 +92,78 @@ def send_discord_alert(
                 time.sleep(2**retries)  # 2, 4, 8, 16, ...
 
     logging.error("Failed to send Discord alert after max retries")
+
+
+def get_new_released_albums(
+    access_token: str,
+) -> dict[str, dict]:
+    """Get new released albums from Spotify API with retries.
+
+    Args:
+        access_token (str): Spotify access_token.
+
+    Returns:
+        A dictionary mapping ETag to the albums data from Spotify API.
+        Possibly partially complete if some page(s) failed after max retries.
+        Typically, the pages are limited to two pages, and items per page is 50.
+        For example: {
+            "etag1": {albums data 1},
+            "etag2": {albums data 2},
+        }
+
+    Raises:
+        ValueError: If failed to get any new released albums after max retries.
+    """
+
+    retries = 0
+    entire_albums = {}
+    url = "https://api.spotify.com/v1/browse/new-releases?limit=50"  # Max limit is 50
+
+    while retries < MAX_RETRIES:
+        try:
+            response = requests.get(
+                url,
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+
+            if response.status_code == 200:
+                response_data = response.json()
+                albums = response_data["albums"]
+                etag = response.headers["ETag"]  # Case insensitive
+                etag = etag.strip('"')
+                entire_albums[etag] = albums
+
+                next_url = albums.get("next")
+                if next_url is None:
+                    return entire_albums  # Happy path: entire url calls succeeded
+
+                url = next_url
+                retries = 0  # Reset retries for the next url page
+                continue
+        except KeyError as e:
+            logging.warning("KeyError when parsing response from Spotify: %s", e)
+        except requests.RequestException as e:
+            logging.warning(
+                "RequestException when calling '/browse/new-releases' Spotify endpoint: %s",
+                e,
+            )
+        finally:
+            logging.warning("Failed to call '/browse/new-releases' Spotify endpoint")
+            retries += 1
+
+            if retries < MAX_RETRIES:
+                time.sleep(2**retries)  # 2, 4, 8, 16, ...
+
+    if entire_albums:
+        logging.error(
+            "Partially succeeded to get new released albums from Spotify after max retries. Failed at url: %s",
+            url,
+        )
+        return entire_albums
+
+    logging.error(
+        "Failed to get any new released albums from Spotify after max retries"
+    )
+    raise ValueError(
+        "Failed to get any new released albums from Spotify after max retries"
+    )
