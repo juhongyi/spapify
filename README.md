@@ -15,8 +15,8 @@
 - [ ] Remove Users' Saved Albums
 - [ ] Check User's Saved Albums
 - [ ] 👀 Get New Releases
-  - Checking new data frequency...
-  - Using ETag HTTP header
+  - [x️] Checking new data frequency using ETag HTTP header
+  - [ ] Developing cronjob to call the API
 
 ### Artists
 
