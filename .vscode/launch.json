@@ -9,6 +9,10 @@
       "type": "debugpy",
       "request": "launch",
       "program": "${file}",
+      "args": [
+        "--job",
+        "JOB_NAME" // Specify the job to run e.g., "refresh_access_token", "get_new_releases"
+      ],
       "console": "integratedTerminal",
       "envFile": "${workspaceFolder}/.env"
     }
