@@ -78,3 +78,4 @@
 - uv
 - requests
 - dotenvx
+- cron
