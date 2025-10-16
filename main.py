@@ -2,8 +2,9 @@ import os
 import base64
 import argparse
 import logging
+import json
 
-from apis import get_access_token, send_discord_alert
+from apis import get_access_token, send_discord_alert, get_new_released_albums
 
 
 logging.basicConfig(
@@ -53,35 +54,46 @@ def refresh_access_token(
         )
 
 
-# def poc_get_new_releases_etag():
-#     # entire_albums = []
-#     etags = []
-#     url = "https://api.spotify.com/v1/browse/new-releases?limit=50"  # max limit is 50
+def get_new_releases(
+    access_token: str, discord_webhook_id: str, discord_webhook_token: str
+) -> None:
+    """Get new released albums from Spotify and save to ./data/get_new_releases.
 
-#     while True:
-#         response = requests.get(
-#             url,
-#             headers={"Authorization": f"Bearer {poc_get_access_token()}"},
-#         )
-#         albums = response.json().get("albums")
-#         # entire_albums.append(albums)
+    Args:
+        access_token (str): Spotify access_token.
+        discord_webhook_id (str): The ID of the Discord webhook.
+        discord_webhook_token (str): The token of the Discord webhook.
 
-#         etags.append(response.headers.get("ETag"))
+    Raises:
+        ValueError: If failed to get any new released albums after max retries.
+        JSONDecodeError: If failed to save new released albums data to json.
+    """
 
-#         next_url = albums.get("next")
-#         if next_url is None:
-#             break
-#         url = next_url
+    try:
+        # TODO: handle alerts for partial success
+        albums = get_new_released_albums(access_token=access_token)
 
-#     webhook_id = os.getenv("DSCRD_WEBHOOK_ID")
-#     webhook_token = os.getenv("DSCRD_WEBHOOK_TOKEN")
-#     webhook_url = f"https://discord.com/api/webhooks/{webhook_id}/{webhook_token}"
-
-#     for etag in etags:
-#         response = requests.post(
-#             webhook_url,
-#             json={"content": etag.strip('"')},
-#         )
+        for etag, data in albums.items():
+            os.makedirs("./data/get_new_releases", exist_ok=True)
+            with open(f"./data/get_new_releases/{etag}.json", "w") as f:
+                json.dump(data, f, indent=2)
+                logging.info("Saved new released albums data to %s.json", etag)
+    except ValueError:
+        logging.error(
+            "Failed to get any new released albums from Spotify after max retries"
+        )
+        send_discord_alert(
+            message="Failed to get any new released albums from Spotify.",
+            discord_webhook_id=discord_webhook_id,
+            discord_webhook_token=discord_webhook_token,
+        )
+    except json.JSONDecodeError as e:
+        logging.error("Failed to save new released albums data to json: %s", e)
+        send_discord_alert(
+            message="Failed to save new released albums data to json.",
+            discord_webhook_id=discord_webhook_id,
+            discord_webhook_token=discord_webhook_token,
+        )
 
 
 def main():
@@ -103,8 +115,14 @@ def main():
         client_secret = os.environ["SPTFY_CLIENT_SECRET"]
         discord_webhook_id = os.environ["DSCRD_WEBHOOK_ID"]
         discord_webhook_token = os.environ["DSCRD_WEBHOOK_TOKEN"]
+
+        with open("access_token.txt", "r") as f:
+            access_token = f.read()
     except KeyError as e:
         logging.error("Environment variable not set")
+        raise e
+    except FileNotFoundError as e:
+        logging.error("access_token.txt file not found")
         raise e
 
     if args.job == "refresh_access_token":
@@ -115,7 +133,11 @@ def main():
             discord_webhook_token=discord_webhook_token,
         )
     elif args.job == "get_new_releases":
-        ...  # get_new_releases()
+        get_new_releases(
+            access_token=access_token,
+            discord_webhook_id=discord_webhook_id,
+            discord_webhook_token=discord_webhook_token,
+        )
 
 
 if __name__ == "__main__":
