@@ -121,14 +121,8 @@ def main():
         client_secret = os.environ["SPTFY_CLIENT_SECRET"]
         discord_webhook_id = os.environ["DSCRD_WEBHOOK_ID"]
         discord_webhook_token = os.environ["DSCRD_WEBHOOK_TOKEN"]
-
-        with open("access_token.txt", "r") as f:
-            access_token = f.read()
     except KeyError as e:
         logging.error("Environment variable not set")
-        raise e
-    except FileNotFoundError as e:
-        logging.error("access_token.txt file not found")
         raise e
 
     if args.job == "refresh_access_token":
@@ -138,7 +132,15 @@ def main():
             discord_webhook_id=discord_webhook_id,
             discord_webhook_token=discord_webhook_token,
         )
-    elif args.job == "get_new_releases":
+
+    try:
+        with open("access_token.txt", "r") as f:
+            access_token = f.read()
+    except FileNotFoundError as e:
+        logging.error("access_token.txt file not found")
+        raise e
+
+    if args.job == "get_new_releases":
         get_new_releases(
             access_token=access_token,
             discord_webhook_id=discord_webhook_id,
