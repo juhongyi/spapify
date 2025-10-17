@@ -22,9 +22,7 @@
 - [ ] Save Albums for Current User
 - [ ] Remove Users' Saved Albums
 - [ ] Check User's Saved Albums
-- [ ] 👀 Get New Releases
-  - [x️] Checking new data frequency using ETag HTTP header
-  - [ ] Developing cronjob to call the API
+- [x] Get New Releases
 
 ### Artists
 
