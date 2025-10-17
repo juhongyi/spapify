@@ -78,6 +78,12 @@ def get_new_releases(
             with open(f"./data/get_new_releases/{etag}.json", "w") as f:
                 json.dump(data, f, indent=2)
                 logging.info("Saved new released albums data to %s.json", etag)
+
+            send_discord_alert(
+                message=f"Successfully got new released albums from Spotify and saved to ./data/get_new_releases/{etag}.json.",
+                discord_webhook_id=discord_webhook_id,
+                discord_webhook_token=discord_webhook_token,
+            )
     except ValueError:
         logging.error(
             "Failed to get any new released albums from Spotify after max retries"
