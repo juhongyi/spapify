@@ -36,6 +36,8 @@ def get_access_token(client_string: str) -> str:
             if response.ok:
                 response_data = response.json()
                 return response_data["access_token"]  # Early return
+
+            logging.warning("Response not OK from '/api/token' Spotify endpoint")
         except KeyError:
             logging.warning(
                 "access_token not found in response from '/api/token' Spotify endpoint"
@@ -44,12 +46,10 @@ def get_access_token(client_string: str) -> str:
             logging.warning(
                 "RequestException when calling '/api/token' Spotify endpoint: %s", e
             )
-        finally:
-            logging.warning("Failed to call '/api/token' Spotify endpoint")
-            retries += 1
 
-            if retries < MAX_RETRIES:
-                time.sleep(2**retries)  # 2, 4, 8, 16, ...
+        retries += 1
+        if retries < MAX_RETRIES:
+            time.sleep(2**retries)  # 2, 4, 8, 16, ...
 
     raise ValueError("Failed to get access_token from Spotify after max retries")
 
@@ -81,14 +81,14 @@ def send_discord_alert(
                     "Successfully sent Discord alert with message: %s", message
                 )
                 return  # Early return
+
+            logging.warning("Response not OK when sending Discord webhook alert")
         except requests.RequestException as e:
             logging.warning("RequestException when calling Discord webhook: %s", e)
-        finally:
-            logging.warning("Failed to send Discord alert with message: %s", message)
-            retries += 1
 
-            if retries < MAX_RETRIES:
-                time.sleep(2**retries)  # 2, 4, 8, 16, ...
+        retries += 1
+        if retries < MAX_RETRIES:
+            time.sleep(2**retries)  # 2, 4, 8, 16, ...
 
     logging.error("Failed to send Discord alert after max retries")
 
@@ -139,6 +139,10 @@ def get_new_released_albums(
                 url = next_url
                 retries = 0  # Reset retries for the next url page
                 continue
+
+            logging.warning(
+                "Response not OK from '/browse/new-releases' Spotify endpoint"
+            )
         except KeyError as e:
             logging.warning("KeyError when parsing response from Spotify: %s", e)
         except requests.RequestException as e:
@@ -146,12 +150,10 @@ def get_new_released_albums(
                 "RequestException when calling '/browse/new-releases' Spotify endpoint: %s",
                 e,
             )
-        finally:
-            logging.warning("Failed to call '/browse/new-releases' Spotify endpoint")
-            retries += 1
 
-            if retries < MAX_RETRIES:
-                time.sleep(2**retries)  # 2, 4, 8, 16, ...
+        retries += 1
+        if retries < MAX_RETRIES:
+            time.sleep(2**retries)  # 2, 4, 8, 16, ...
 
     if entire_albums:
         logging.error(
