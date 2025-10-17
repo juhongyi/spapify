@@ -1,5 +1,13 @@
 # Spapify: Insight from music data
 
+## Deployment
+
+### Pre-requisites
+
+- uv
+- dotenvx
+- cron
+
 ## Web API list
 
 ☑️ - Implemented on our service  
