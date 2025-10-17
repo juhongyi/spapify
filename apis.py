@@ -33,7 +33,7 @@ def get_access_token(client_string: str) -> str:
                 data={"grant_type": "client_credentials"},
             )
 
-            if response.status_code == 200:
+            if response.ok:
                 response_data = response.json()
                 return response_data["access_token"]  # Early return
         except KeyError:
@@ -76,7 +76,7 @@ def send_discord_alert(
                 json={"content": message},
             )
 
-            if response.status_code == 200:
+            if response.ok:
                 logging.info(
                     "Successfully sent Discord alert with message: %s", message
                 )
@@ -125,7 +125,7 @@ def get_new_released_albums(
                 headers={"Authorization": f"Bearer {access_token}"},
             )
 
-            if response.status_code == 200:
+            if response.ok:
                 response_data = response.json()
                 albums = response_data["albums"]
                 etag = response.headers["ETag"]  # Case insensitive
