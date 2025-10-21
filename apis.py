@@ -165,3 +165,60 @@ def get_new_released_albums(
     raise ValueError(
         "Failed to get any new released albums from Spotify after max retries"
     )
+
+
+def get_top_tracks_from_chart(
+    api_key: str,
+) -> dict[str, dict]:
+    """Get top tracks from Last.fm chart.gettoptracks endpoint with retries.
+
+    Args:
+        api_key (str): Last.fm API key.
+
+    Returns:
+        A dictionary containing the top tracks data from Last.fm API.
+        For example: {
+            "tracks": {
+                "track": [
+                    {track data 0},
+                    {track data 1},
+                    ...
+                ],
+                "@attr": {
+                    "page": "1",
+                    "perPage": "1000",
+                    "totalPages": "10",
+                    "total": "10000"
+                }
+            }
+        }
+    Raises:
+        ValueError: If failed to get top tracks from chart after max retries.
+    """
+
+    retries = 0
+
+    while retries < MAX_RETRIES:
+        if 0 < retries:
+            time.sleep(2**retries)  # 2, 4, 8, 16, ...
+
+        try:
+            response = requests.get(
+                f"https://ws.audioscrobbler.com/2.0/?method=chart.gettoptracks&api_key={api_key}&format=json&limit=1000"  # Max limit is 1000
+            )
+
+            if response.status_code == 200:
+                return response.json()  # Early return
+
+            logging.warning(
+                "Response not OK when calling 'chart.gettoptracks' endpoint. Status code: %s",
+                response.status_code,
+            )
+        except requests.RequestException:
+            logging.warning(
+                "RequestException when calling 'chart.gettoptracks' endpoint"
+            )
+
+        retries += 1
+
+    raise ValueError("Failed to get top tracks from chart after max retries")
