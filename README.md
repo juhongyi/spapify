@@ -1,26 +1,23 @@
 # Spapify: Insight from music data
 
+## Jobs
+
+### Chart
+
+- `get_top_tracks` Get top tracks from Last.fm chart
+
 ## Deployment
 
-### Pre-requisites
-
-- uv
-- dotenvx
-- cron
-
-## Web API list
-
-☑️ - Implemented on our service  
-👀 - Currently working on
-
-### Albums
-
-- [x] Get New Releases
+```bash
+# Example to run a specific job
+bash run.sh --job=JOB_NAME
+```
 
 ## Tech stack
 
 - Python 3.13
 - uv
-- requests
 - dotenvx
 - cron
+- PostgreSQL
+- Docker
