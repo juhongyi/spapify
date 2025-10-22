@@ -1,0 +1,15 @@
+services:
+  database:
+    image: postgres:17-alpine
+    ports:
+      - 5432:5432
+    env_file:
+      - $DOTENV_FILE
+    environment:
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=$DB_PASSWORD
+    volumes:
+      - database_volume:/var/lib/postgresql/data
+    restart: unless-stopped
+volumes:
+  database_volume:

@@ -13,6 +13,11 @@
 bash run.sh --job=JOB_NAME
 ```
 
+```bash
+# Example to run Docker services
+DOTENV_FILE=.env docker compose up -d
+```
+
 ## Tech stack
 
 - Python 3.13
