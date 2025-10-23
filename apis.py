@@ -1,10 +1,18 @@
+import os
 import time
 import logging
+from datetime import datetime
 
 import requests
+import psycopg
 
 
 MAX_RETRIES = 5
+
+DB_HOST = os.environ["DB_HOST"]
+DB_NAME = os.environ["DB_NAME"]
+DB_USER = os.environ["DB_USER"]
+DB_PASSWORD = os.environ["DB_PASSWORD"]
 
 
 def get_access_token(client_string: str) -> str:
@@ -222,3 +230,89 @@ def get_top_tracks_from_chart(
         retries += 1
 
     raise ValueError("Failed to get top tracks from chart after max retries")
+
+
+def insert_data_from_top_tracks(top_tracks: list[dict[str, str | dict | list]]) -> None:
+    """Insert data from top tracks into main (PostgreSQL) database.
+
+    Args:
+        top_tracks (list[dict]): List of track data from chart.getTopTracks API.
+
+    Raises:
+        psycopg.DatabaseError: If failed to insert data after max retries.
+    """
+
+    retries = 0
+
+    while retries < MAX_RETRIES:
+        if 0 < retries:
+            time.sleep(2**retries)  # 2, 4, 8, 16, ...
+
+        try:
+            with psycopg.connect(
+                f"dbname={DB_NAME} user={DB_USER} password={DB_PASSWORD} host={DB_HOST}"
+            ) as conn:
+                with conn.cursor() as cur:
+                    cur.executemany(
+                        """
+                        INSERT INTO artists (name, lastfm_url)
+                        SELECT %s, %s
+                        WHERE NOT EXISTS (
+                            SELECT * FROM artists WHERE lastfm_url = %s
+                        )
+                        """,
+                        [
+                            (
+                                track["artist"]["name"],
+                                track["artist"]["url"],
+                                track["artist"]["url"],  # for 'WHERE NOT EXISTS' clause
+                            )
+                            for track in top_tracks
+                        ],
+                    )
+                    cur.executemany(
+                        """
+                        INSERT INTO tracks (name, artist_id, lastfm_url)
+                        SELECT %s, (SELECT id FROM artists WHERE lastfm_url = %s), %s
+                        WHERE NOT EXISTS (
+                            SELECT * FROM tracks WHERE lastfm_url = %s
+                        )
+                        """,
+                        [
+                            (
+                                track["name"],
+                                track["artist"]["url"],  # to identify artist_id FK
+                                track["url"],
+                                track["url"],  # for 'WHERE NOT EXISTS' clause
+                            )
+                            for track in top_tracks
+                        ],
+                    )
+                    cur.executemany(
+                        """
+                        INSERT INTO chart_histories (track_id, playcount, listener, chart_date, rank)
+                        VALUES ((SELECT id FROM tracks WHERE lastfm_url = %s), %s, %s, %s, %s)
+                        """,
+                        [
+                            (
+                                track["url"],  # to identify track_id FK
+                                track["playcount"],
+                                track["listeners"],
+                                datetime.now().isoformat(timespec="minutes"),
+                                index + 1,  # rank starts from 1
+                            )
+                            for index, track in enumerate(top_tracks)
+                        ],
+                    )
+        except psycopg.OperationalError as e:
+            logging.warning(
+                "Database operational error when inserting data from top tracks: %s", e
+            )
+        else:
+            return
+
+        retries += 1
+
+    raise psycopg.DatabaseError(
+        "Failed to insert data from top tracks into database after max retries"
+    )
