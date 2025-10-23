@@ -5,11 +5,14 @@ import logging
 import json
 from datetime import datetime
 
+import psycopg
+
 from apis import (
     get_access_token,
     send_discord_alert,
     get_new_released_albums,
     get_top_tracks_from_chart,
+    insert_data_from_top_tracks,
 )
 
 
@@ -111,7 +114,13 @@ def get_new_releases(
 def chart_get_top_tracks(
     api_key: str, discord_webhook_id: str, discord_webhook_token: str
 ) -> None:
-    """Get top tracks from Last.fm chart and save JSON to local file system."""
+    """Get top tracks from Last.fm chart and insert into database.
+
+    Args:
+        api_key (str): Last.fm API key.
+        discord_webhook_id (str): The ID of the Discord webhook.
+        discord_webhook_token (str): The token of the Discord webhook.
+    """
 
     try:
         tracks = get_top_tracks_from_chart(api_key=api_key)
@@ -122,8 +131,13 @@ def chart_get_top_tracks(
             json.dump(tracks, f, indent=2)
             logging.info("Saved top tracks from Last.fm chart to %s.json", now)
 
+        insert_data_from_top_tracks(top_tracks=tracks["tracks"]["track"])
+
+        logging.info(
+            "Successfully got top tracks from Last.fm chart and inserted into database."
+        )
         send_discord_alert(
-            message=f"Successfully got top tracks from Last.fm chart and saved to ./data/chart/get_top_tracks/{now}.json.",
+            message="Successfully got top tracks from Last.fm chart and inserted into database.",
             discord_webhook_id=discord_webhook_id,
             discord_webhook_token=discord_webhook_token,
         )
@@ -138,6 +152,20 @@ def chart_get_top_tracks(
         logging.error("Failed to save top tracks data to json: %s", e)
         send_discord_alert(
             message="Failed to save top tracks data to json.",
+            discord_webhook_id=discord_webhook_id,
+            discord_webhook_token=discord_webhook_token,
+        )
+    except KeyError as e:
+        logging.error("KeyError from chart.getTopTracks data: %s", e)
+        send_discord_alert(
+            message="KeyError from chart.getTopTracks data.",
+            discord_webhook_id=discord_webhook_id,
+            discord_webhook_token=discord_webhook_token,
+        )
+    except psycopg.DatabaseError as e:
+        logging.error("Database error when inserting data from top tracks: %s", e)
+        send_discord_alert(
+            message="Database error when inserting data from top tracks.",
             discord_webhook_id=discord_webhook_id,
             discord_webhook_token=discord_webhook_token,
         )
