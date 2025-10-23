@@ -5,6 +5,7 @@ description = "Insight from music data"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "psycopg[binary]>=3.2.11",
     "requests>=2.32.5",
 ]
 
