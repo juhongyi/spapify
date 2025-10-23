@@ -25,4 +25,4 @@ DOTENV_FILE=.env docker compose up -d
 - dotenvx
 - cron
 - PostgreSQL
-- Docker
+- Docker Compose
