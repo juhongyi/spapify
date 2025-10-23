@@ -13,7 +13,7 @@ CREATE TABLE chart_histories (
     id          SERIAL          PRIMARY KEY,
     track_id    INTEGER         NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
     playcount   INTEGER         NOT NULL,
-    listeners   INTEGER         NOT NULL,
+    listener    INTEGER         NOT NULL,
     chart_date  TIMESTAMP       NOT NULL,
     rank        SMALLINT        NOT NULL,
     UNIQUE(track_id, chart_date)
