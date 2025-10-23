@@ -6,7 +6,7 @@ services:
     env_file:
       - $DOTENV_FILE
     environment:
-      - POSTGRES_USER=app
+      - POSTGRES_USER=$DB_USER
       - POSTGRES_PASSWORD=$DB_PASSWORD
     volumes:
       - database_volume:/var/lib/postgresql/data
