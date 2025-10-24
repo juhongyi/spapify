@@ -3,8 +3,17 @@ import base64
 import argparse
 import logging
 import json
+from datetime import datetime
 
-from apis import get_access_token, send_discord_alert, get_new_released_albums
+import psycopg
+
+from apis import (
+    get_access_token,
+    send_discord_alert,
+    get_new_released_albums,
+    get_top_tracks_from_chart,
+    insert_data_from_top_tracks,
+)
 
 
 logging.basicConfig(
@@ -102,6 +111,66 @@ def get_new_releases(
         )
 
 
+def chart_get_top_tracks(
+    api_key: str, discord_webhook_id: str, discord_webhook_token: str
+) -> None:
+    """Get top tracks from Last.fm chart and insert into database.
+
+    Args:
+        api_key (str): Last.fm API key.
+        discord_webhook_id (str): The ID of the Discord webhook.
+        discord_webhook_token (str): The token of the Discord webhook.
+    """
+
+    try:
+        tracks = get_top_tracks_from_chart(api_key=api_key)
+        now = datetime.now().isoformat(timespec="minutes")
+
+        os.makedirs("./data/chart/get_top_tracks", exist_ok=True)
+        with open(f"./data/chart/get_top_tracks/{now}.json", "w") as f:
+            json.dump(tracks, f, indent=2)
+            logging.info("Saved top tracks from Last.fm chart to %s.json", now)
+
+        insert_data_from_top_tracks(top_tracks=tracks["tracks"]["track"])
+
+        logging.info(
+            "Successfully got top tracks from Last.fm chart and inserted into database."
+        )
+        send_discord_alert(
+            message="Successfully got top tracks from Last.fm chart and inserted into database.",
+            discord_webhook_id=discord_webhook_id,
+            discord_webhook_token=discord_webhook_token,
+        )
+    except ValueError as e:
+        logging.error(e)
+        send_discord_alert(
+            message="Failed to get top tracks from Last.fm chart.",
+            discord_webhook_id=discord_webhook_id,
+            discord_webhook_token=discord_webhook_token,
+        )
+    except json.JSONDecodeError as e:
+        logging.error("Failed to save top tracks data to json: %s", e)
+        send_discord_alert(
+            message="Failed to save top tracks data to json.",
+            discord_webhook_id=discord_webhook_id,
+            discord_webhook_token=discord_webhook_token,
+        )
+    except KeyError as e:
+        logging.error("KeyError from chart.getTopTracks data: %s", e)
+        send_discord_alert(
+            message="KeyError from chart.getTopTracks data.",
+            discord_webhook_id=discord_webhook_id,
+            discord_webhook_token=discord_webhook_token,
+        )
+    except psycopg.DatabaseError as e:
+        logging.error("Database error when inserting data from top tracks: %s", e)
+        send_discord_alert(
+            message="Database error when inserting data from top tracks.",
+            discord_webhook_id=discord_webhook_id,
+            discord_webhook_token=discord_webhook_token,
+        )
+
+
 def main():
     """Main function to parse arguments and execute corresponding job."""
 
@@ -119,6 +188,7 @@ def main():
     try:
         client_id = os.environ["SPTFY_CLIENT_ID"]
         client_secret = os.environ["SPTFY_CLIENT_SECRET"]
+        lastfm_api_key = os.environ["LSTFM_API_KEY"]
         discord_webhook_id = os.environ["DSCRD_WEBHOOK_ID"]
         discord_webhook_token = os.environ["DSCRD_WEBHOOK_TOKEN"]
     except KeyError as e:
@@ -143,6 +213,12 @@ def main():
     if args.job == "get_new_releases":
         get_new_releases(
             access_token=access_token,
+            discord_webhook_id=discord_webhook_id,
+            discord_webhook_token=discord_webhook_token,
+        )
+    if args.job == "chart_get_top_tracks":
+        chart_get_top_tracks(
+            api_key=lastfm_api_key,
             discord_webhook_id=discord_webhook_id,
             discord_webhook_token=discord_webhook_token,
         )
