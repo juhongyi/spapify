@@ -3,8 +3,6 @@ services:
     image: postgres:17-alpine
     ports:
       - 5432:5432
-    env_file:
-      - $DOTENV_FILE
     environment:
       - POSTGRES_USER=$DB_USER
       - POSTGRES_PASSWORD=$DB_PASSWORD

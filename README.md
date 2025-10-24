@@ -15,7 +15,7 @@ bash run.sh --job=JOB_NAME
 
 ```bash
 # Example to run Docker services
-DOTENV_FILE=.env docker compose up -d
+docker compose --env-file .env up -d
 ```
 
 ## Tech stack
